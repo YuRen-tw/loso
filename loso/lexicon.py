@@ -1,19 +1,18 @@
-# -*- coding: utf8 -*-
-
 import re
 import logging
 
-from loso import util
+#from loso import util
+import util
 
 # default delimiters for splitSentence
-default_delimiters = set(u"""\n\r\t ,.:"()[]{}。，、；：！「」『』─（）﹝﹞…﹏＿‧""")
+default_delimiters = set('\n\r\t ,.:"()[]{}。，、；：！「」『』─（）﹝﹞…﹏＿‧')
 
-eng_term_pattern = """[a-zA-Z0-9\\-_']+"""
+eng_term_pattern = r"[a-zA-Z0-9\-_']+"
 
 def iterEnglishTerms(text):
-    """Iterate English terms from Chinese text
+    '''Iterate English terms from Chinese text
     
-    """
+    '''
     terms = []
     parts = text.split()
     for part in parts:
@@ -22,25 +21,25 @@ def iterEnglishTerms(text):
     return terms
 
 def iterMixTerms(text, eng_prefix='E'):
-    """Iterate sentence which contains English and Chinese terms, for example
+    '''Iterate sentence which contains English and Chinese terms, for example
     
-        "C1C2C3C4 E1 E2 C5C6" 
+        'C1C2C3C4 E1 E2 C5C6'
     
     will return
-     
-        ["C1C2C3C4", "Ee1", "Ee2", "C5C6"]
+    
+        ['C1C2C3C4', 'Ee1", 'Ee2", 'C5C6']
     
     Another example in real lief:
     
-        "請問一下為什麼我的ip會block ?"
-        
+        '請問一下為什麼我的ip會block ?'
+    
     will return
     
-        [u"請問一下為什麼我的", u'Eip', u"會", u'Eblock']    
-        
+        ['請問一下為什麼我的', 'Eip', '會, 'Eblock']    
+    
     The eng_prefix is the prefix which will be add to front of English terms
     
-    """
+    '''
     # last position term
     terms = []
     parts = text.split()
@@ -61,9 +60,9 @@ def iterMixTerms(text, eng_prefix='E'):
     return terms
 
 def splitSentence(text, delimiters=None):
-    """Split article into sentences by delimiters
+    '''Split article into sentences by delimiters
     
-    """
+    '''
     if delimiters is None:
         delimiters = default_delimiters
     
@@ -77,9 +76,9 @@ def splitSentence(text, delimiters=None):
     yield ''.join(sentence)
     
 def iterTerms(n, text, emmit_head_tail=False):
-    """Iterate n-gram terms in given text and return a generator. 
+    '''Iterate n-gram terms in given text and return a generator.
     
-    All English in 
+    All English in
     terms will be lower case. All first and last terms in a sentence will be
     emitted another term in the result with 'B' and 'E' prefix.
     
@@ -91,9 +90,9 @@ def iterTerms(n, text, emmit_head_tail=False):
     
     ['C1', 'BC1', 'C2', 'C3', 'EC3']
     
-    where the C1, C2 and C3 are Chinese words. 
+    where the C1, C2 and C3 are Chinese words.
     
-    """
+    '''
     for sentence in splitSentence(text):
         first = True
         term = None
@@ -109,9 +108,9 @@ def iterTerms(n, text, emmit_head_tail=False):
                 yield 'E' + term
                 
 def findBestSegment(grams, op=lambda a, b: a*b):
-    """Find the best segmentation
+    '''Find the best segmentation
     
-    """
+    '''
     def makeTuple(term):
         return ([term[0]], term[1])
     # n-gram
@@ -123,7 +122,7 @@ def findBestSegment(grams, op=lambda a, b: a*b):
     table = {}
     
     # initialize the best solution table
-    for i in xrange(size):
+    for i in range(size):
         term = grams[0][i]
         table[(i, i)] = makeTuple(term)
         
@@ -138,13 +137,13 @@ def findBestSegment(grams, op=lambda a, b: a*b):
     # handle current_size together cases, for example
     # e.g. C1,C2,C3,C4, if the current_size is 2, then the cases will be
     # [C1, C2], [C2, C3], [C3, C4]
-    for current_size in xrange(2, size+1):
-        for i in xrange(size - current_size + 1):
+    for current_size in range(2, size+1):
+        for i in range(size - current_size + 1):
             # handle all possible partition cases, 
             # e.g. with current_size 4, we can have partition cases:
             # (1, 3), (3, 1), (2, 2)
             candidates = []
-            for count in xrange(1, (current_size/2) + 1):
+            for count in range(1, (current_size//2) + 1):
                 # count of left and right partition
                 left, right = count, current_size - count
                 candidates.append(getCandidate(i, left, right))
@@ -160,7 +159,7 @@ def findBestSegment(grams, op=lambda a, b: a*b):
             table[current_range] = winner
     return table[(0, size-1)]
 
-class LexiconCategory(object):
+class LexiconCategory:
     
     progress_interval = 10000
     
@@ -171,7 +170,7 @@ class LexiconCategory(object):
         self.db = db
         # name of category
         self.name = name
-        assert ':' not in self.name, """ ":" can't be part of category name"""
+        assert ':' not in self.name, ''' ':' can't be part of category name'''
         
         # prefix of this category
         self.prefix = db.prefix + self.name + ':'
@@ -180,9 +179,9 @@ class LexiconCategory(object):
         self._terms_key = self.prefix + 'terms'
        
     def init(self, ngram=4):
-        """Initialize category in database
+        '''Initialize category in database
         
-        """
+        '''
         # add to category set
         if not self.db.redis.sadd(self.db._category_set_key, self.name):
             # already exists
@@ -195,9 +194,9 @@ class LexiconCategory(object):
         self.logger.info('Add category %s (gram=%s)', self.name, ngram)
         
     def clean(self):
-        """Clean all value of this category
+        '''Clean all value of this category
         
-        """
+        '''
         # remove terms
         terms = self.getTermList()
         keys = [self._lexicon_prefix + term for term in terms]
@@ -205,8 +204,9 @@ class LexiconCategory(object):
         
         # remove meta keys
         for n in self.gram:
-            self.db.redis.delete(self._meta_prefix + ('%s-gram-sum' % n))
-            self.db.redis.delete(self._meta_prefix + ('%s-gram-variety' % n))
+            self.db.redis.delete(self._meta_prefix + '{}{}-gram-sum'.format(n))
+            self.db.redis.delete(self._meta_prefix +
+                                 '{}{}-gram-variety'.format(n))
         self.db.redis.delete(self._meta_prefix + 'gram')
         
         # remove this category from category set
@@ -216,15 +216,15 @@ class LexiconCategory(object):
                          self.name, len(terms))
         
     def getMeta(self, key):
-        """Get value of a meta data
+        '''Get value of a meta data
         
-        """
+        '''
         return self.db.redis.get(self._meta_prefix + key)
     
     def setMeta(self, key, value):
-        """Set value of a meta data
+        '''Set value of a meta data
         
-        """
+        '''
         return self.db.redis.set(self._meta_prefix + key, value)
     
     @property
@@ -232,9 +232,9 @@ class LexiconCategory(object):
         return int(self.getMeta('gram') or 0)
     
     def increaseTerm(self, term, delta=1):
-        """Increase value of a term
+        '''Increase value of a term
         
-        """
+        '''
         # increase number
         key = self._lexicon_prefix + term
         self.db.redis.incr(key, delta)
@@ -242,44 +242,44 @@ class LexiconCategory(object):
         self.db.redis.sadd(self._terms_key, term)
         
     def getTerm(self, term):
-        """Get count of a term
+        '''Get count of a term
         
-        """
+        '''
         key = self._lexicon_prefix + term
         return self.db.redis.get(key)
     
     def getTerms(self, *terms):
-        """Get count of terms
+        '''Get count of terms
         
-        """
+        '''
         keys = [self._lexicon_prefix + term for term in terms]
         return self.db.redis.mget(keys)
     
     def getTermList(self):
-        """Get all term name in this category
+        '''Get all term name in this category
         
-        """
+        '''
         return self.db.redis.smembers(self._terms_key)
     
     def increaseGramSum(self, n, value):
-        """Increase sum of n-gram terms
+        '''Increase sum of n-gram terms
         
-        """
-        key = self._meta_prefix + ('%s-gram-sum' % n)
+        '''
+        key = self._meta_prefix + '{}-gram-sum'.format(n)
         return self.db.redis.incr(key, value)
     
     def increaseGramVariety(self, n, value):
-        """Increase variety of n-gram terms
+        '''Increase variety of n-gram terms
         
-        """
-        key = self._meta_prefix + ('%s-gram-variety' % n)
+        '''
+        key = self._meta_prefix + '{}-gram-variety'.format(n)
         return self.db.redis.incr(key, value)
     
     def getGramSum(self, n):
-        """Get sum of n-gram terms
+        '''Get sum of n-gram terms
         
-        """
-        key = '%s-gram-sum' % n
+        '''
+        key = '{}-gram-sum'.format(n)
         return int(self.getMeta(key) or 0)
     
     def getGramVariety(self, n):
@@ -290,40 +290,40 @@ class LexiconCategory(object):
         return int(self.getMeta(key) or 0)
     
     def getStats(self):
-        """Get statistics of this category
+        '''Get statistics of this category
         
-        """
+        '''
         stats = dict(
             gram=self.gram,
             total_sum=0,
             total_variety=0
         )
-        for n in xrange(1, self.gram + 1):
-            sum = self.getGramSum(n)
+        for n in range(1, self.gram + 1):
+            gsum = self.getGramSum(n)
             variety = self.getGramVariety(n)
-            sum_key = '%sgram_sum' % n
-            variety_key = '%sgram_variety' % n
-            stats[sum_key] = sum
+            sum_key = '{}gram_sum'.format(n)
+            variety_key = '{}gram_variety'.format(n)
+            stats[sum_key] = gsum
             stats[variety_key] = variety
-            stats['total_sum'] += sum
+            stats['total_sum'] += gsum
             stats['total_variety'] += variety
         return stats
      
-    def dump(self, file):
+    def dump(self, output_file):
         self.logger.info('Dumping meta-data ...')
-        print >>file, 'gram', self.gram
-        for n in xrange(1, self.gram + 1):
-            name = '%d-gram-sum' % n
+        print('gram', self.gram, file=output_file)
+        for n in range(1, self.gram + 1):
+            name = '{}-gram-sum'.format(n)
             value = self.getGramSum(n)
-            print >>file, name, value
+            print(name, value, file=output_file)
             self.logger.info('Meta-data %s=%s', name, value)
-            name = '%d-gram-variety' % n
+            name = '{}-gram-variety'.format(n)
             value = self.getGramVariety(n)
-            print >>file, name, value
+            print(name, value, file=output_file)
             self.logger.info('Meta-data %s=%s', name, value)
         
         # a blank line
-        print >>file
+        print(file=output_file)
         
         self.logger.info('Dumping lexicons terms ...')
         terms = self.getTermList()
@@ -332,16 +332,15 @@ class LexiconCategory(object):
         values = self.getTerms(*terms)
         self.logger.info('Get %d values', len(terms))
         for i, (term, count) in enumerate(zip(terms, values)):
-            term = term.decode('utf8')
-            print >>file, count, term
+            print(count, term, file=output_file)
             if i % self.progress_interval == 0:
                 if i % self.progress_interval == 0:
                     whole = len(terms)
-                    per = (i/float(whole))*100.0
+                    per = i / whole * 100
                     self.logger.info('Progress %d/%d (%02d%%)', i, whole, per)
         
-class LexiconDatabase(object):
-    """Lexicon database is for storing lexicon counting information
+class LexiconDatabase:
+    '''Lexicon database is for storing lexicon counting information
     
     The scheme of database is simple, following are the key value pairs
     we will use in the Redis database. We assume the prefix of is "loso:" here.
@@ -356,16 +355,16 @@ class LexiconDatabase(object):
     following key value pair
     
         loso:cat:<category name>:meta:<key> -> meta value
-        
+    
     And we will need to know all terms we have in a category. Here we use
     
         loso:cat:<category name>:terms -> Set which contains all term in category
-        
+    
     Finally, here comes the lexicon terms, we use following key value pair
     
         loso:cat:<category name>:lex:<term> -> Count of term in this category
     
-    """
+    '''
     
     progress_interval = 10000
     
@@ -388,11 +387,11 @@ class LexiconDatabase(object):
         self._category_set_key = self.prefix + 'category'
     
     def getCategory(self, name):
-        """Get category and return 
+        '''Get category and return 
         
-        """
+        '''
         if name not in self.getCategoryList():
-            return 
+            return None
         category = self._categories_cache.get(name)
         if category:
             return category
@@ -401,9 +400,9 @@ class LexiconDatabase(object):
         return category
     
     def addCategory(self, name):
-        """Add a category and return
+        '''Add a category and return
         
-        """
+        '''
         category = self._categories_cache.get(name)
         if category:
             return category
@@ -413,15 +412,15 @@ class LexiconDatabase(object):
         return category
     
     def getCategoryList(self):
-        """Get list of all categories
+        '''Get list of all categories
         
-        """
+        '''
         return self.redis.smembers(self._category_set_key)
        
     def clean(self):
-        """Clean lexicon up
+        '''Clean lexicon up
         
-        """
+        '''
         categories = self.getCategoryList()
         if categories:
             for name in categories:
@@ -431,29 +430,29 @@ class LexiconDatabase(object):
                          len(categories))
         
     def _getTermScore(self, term, ngram, categories):
-        """Get score of a term
+        '''Get score of a term
         
-        """
+        '''
         score = 0.00000001
         for c in categories:
             count = int(c.getTerm(term) or 0)
             n = len(term)
-            sum = int(c.getGramSum(n) or 0)
+            gsum = int(c.getGramSum(n) or 0)
             variety = int(c.getGramVariety(n) or 0)
             if not variety:
                 v = 1
             else:
-                v = sum/float(variety)
+                v = gsum / variety
                 v *= v
-            score += count/v
+            score += count / v
         return score
 
     def splitTerms(self, text, categories=None):
-        """Split text into terms, categories is a list of category to read
+        '''Split text into terms, categories is a list of category to read
         lexicon data from, if it is empty, it means to get data from all
         categories
         
-        """
+        '''
         all_category = self.getCategoryList()
         if not categories:
             categories = all_category
@@ -465,7 +464,7 @@ class LexiconDatabase(object):
                 continue
             c_list.append(c)
         grams = []
-        for n in xrange(1, self.ngram+1):
+        for n in range(1, self.ngram+1):
             terms = []
             for term in util.ngram(n, text):
                 score = self._getTermScore(term, n, c_list)
@@ -476,7 +475,7 @@ class LexiconDatabase(object):
         self.logger.debug('Best score: %s', best_score)
         return terms
        
-class LexiconBuilder(object):
+class LexiconBuilder:
     
     progress_interval = 10000
     
@@ -488,12 +487,12 @@ class LexiconBuilder(object):
         self.ngram = ngram
     
     def feed(self, category, text):
-        """Feed text into lexicon database and return total terms has been fed
+        '''Feed text into lexicon database and return total terms has been fed
         
-        """
+        '''
         cat = self.db.addCategory(category)
         total = 0
-        for n in xrange(1, self.ngram+1):
+        for n in range(1, self.ngram+1):
             self.logger.debug('Processing %d-gram', n)
             terms_count = {}
             sum = 0
@@ -511,7 +510,7 @@ class LexiconBuilder(object):
                 sum += delta
                 if i % self.progress_interval == 0:
                     whole = len(terms_count)
-                    per = (i/float(whole))*100.0
+                    per = i / whole * 100.0
                     self.logger.info('Progress %d/%d (%02d%%)', i, whole, per)
                                       
             # add n-gram count
@@ -521,3 +520,4 @@ class LexiconBuilder(object):
             self.logger.debug('Increase %d-gram variety to %d', n, result)
         self.logger.info('Fed %d terms', total)
         return total
+

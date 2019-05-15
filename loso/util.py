@@ -10,7 +10,8 @@ def ngram(n, terms):
     '''
     for i in range(len(terms) - n + 1):
         yield terms[i:i+n]
-        
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
