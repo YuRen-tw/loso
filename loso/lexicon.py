@@ -1,8 +1,7 @@
 import re
 import logging
 
-#from loso import util
-import util
+from loso import util
 
 # default delimiters for splitSentence
 default_delimiters = set('\n\r\t ,.:"()[]{}。，、；：！「」『』─（）﹝﹞…﹏＿‧')
@@ -27,7 +26,7 @@ def iterMixTerms(text, eng_prefix='E'):
     
     will return
     
-        ['C1C2C3C4', 'Ee1", 'Ee2", 'C5C6']
+        ['C1C2C3C4', 'Ee1', 'Ee2', 'C5C6']
     
     Another example in real lief:
     
@@ -35,7 +34,7 @@ def iterMixTerms(text, eng_prefix='E'):
     
     will return
     
-        ['請問一下為什麼我的', 'Eip', '會, 'Eblock']    
+        ['請問一下為什麼我的', 'Eip', '會', 'Eblock']
     
     The eng_prefix is the prefix which will be add to front of English terms
     

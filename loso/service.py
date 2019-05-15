@@ -5,7 +5,7 @@ import redis
 
 from loso import lexicon
 
-class SegumentService(object):
+class SegumentService:
     
     def __init__(self, config, logger=None):
         self.logger = logger
@@ -27,22 +27,22 @@ class SegumentService(object):
         self.builder = lexicon.LexiconBuilder(self.db, self.ngram)
     
     def getStats(self):
-        """Get statistics information
+        '''Get statistics information
         
-        """
+        '''
         return self.db.getStats()
     
     def feed(self, category, text):
-        """Feed text data to lexicon database
+        '''Feed text data to lexicon database
         
-        """
+        '''
         self.logger.info('Feed %d bytes data', len(text))
         return self.builder.feed(category, text)
         
     def splitTerms(self, text, categories=None):
-        """Split text into terms
+        '''Split text into terms
         
-        """
+        '''
         terms = []
         for sentence in lexicon.splitSentence(text):
             if sentence:
@@ -56,9 +56,9 @@ class SegumentService(object):
         return terms
     
     def splitNgramTerms(self, text):
-        """Split text into 1 to n gram terms
+        '''Split text into 1 to n gram terms
         
-        """
+        '''
         terms = []
         for sentence in lexicon.splitSentence(text):
             if sentence:
@@ -68,18 +68,19 @@ class SegumentService(object):
                         terms.append(mixed)
                     # Chinese sentence
                     else:
-                        for n in xrange(1, self.ngram+1):
+                        for n in range(1, self.ngram+1):
                             terms.extend(lexicon.iterTerms(n, mixed, False))
         return terms
     
     def splitSentence(self, text):
-        """Split text into sentence
+        '''Split text into sentence
         
-        """
+        '''
         return lexicon.splitSentence(text)
     
     def splitMixTerms(self, text):
-        """Split text into Chinese sentence and English terms
+        '''Split text into Chinese sentence and English terms
         
-        """
+        '''
         return list(lexicon.iterMixTerms(text))
+
